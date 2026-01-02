@@ -4,11 +4,11 @@ import sys
 import signal
 
 # SMTP Configuration
-SMTP_SERVER = "172.16.0.5"
-SMTP_PORT = 587
-SENDER_EMAIL = "attacker@dmz.local"
-SENDER_PASSWORD = "password123"
-RECEIVER_EMAIL = "attacker@dmz.local"
+SMTP_SERVER = "172.16.0.2"
+SMTP_PORT = 25
+SENDER_EMAIL = "testuser@jakoutbadr.lab"
+SENDER_PASSWORD = "c"
+RECEIVER_EMAIL = "testuser@jakoutbadr.lab"
 BUFFER_SIZE = 100
 SEND_INTERVAL = 60
 
