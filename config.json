@@ -1,6 +1,0 @@
-{
-    "kali_ip": "192.168.x.x",
-    "port": 4444,
-    "mode": "network",
-    "log_file": "keys.log"
-}
