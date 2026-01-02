@@ -2,16 +2,6 @@
 
 A multi-threaded keystroke logger that uses SMTP to exfiltrate captured keystrokes via email. Designed for network security lab simulations with DMZ-based email relay infrastructure.
 
-## 🏗️ Network Topology
-
-```
-┌──────────────┐       ┌──────────────┐       ┌──────────────┐
-│  LAN         │       │     DMZ      │       │     WAN      │
-│  Victim PC   │──────▶│  SMTP Relay  │──────▶│  Attacker    │
-│ 192.168.x.x  │       │  172.16.0.5  │       │  Mail Server │
-└──────────────┘       └──────────────┘       └──────────────┘
-```
-
 **Data Flow:**
 1. Victim machine captures keystrokes (LAN)
 2. Buffered keystrokes sent via SMTP to DMZ relay (172.16.0.5:587)
