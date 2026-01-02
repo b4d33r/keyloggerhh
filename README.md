@@ -53,7 +53,7 @@ Output: `dist/main.exe`
 
 ### Lab Setup
 - Attacker: Kali Linux
-- Victim: Windows / Ubuntu / Arch Linux
+- Victim: Windows / Linux
 - Port: 4444
 
 ### Step 1: Attacker (Kali)
